@@ -1,0 +1,16 @@
+services:
+  - type: web
+    name: axiom-realtime-aggregator
+    runtime: docker
+    plan: free
+    envVars:
+      - key: PORT
+        value: 10000
+      - key: CACHE_TTL_SECONDS
+        value: 30
+      - key: POLL_INTERVAL_MS
+        value: 5000
+      - key: ALLOWED_ORIGINS
+        value: "*"
+    autoDeploy: true
+    healthCheckPath: /health

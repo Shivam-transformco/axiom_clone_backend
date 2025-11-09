@@ -23,10 +23,12 @@ jest.mock('../src/datasources/jupiter', () => ({
 
 test('discover path returns gecko tokens enriched with jupiter and filtered', async () => {
   const { items } = await getTokens({ limit: 10, sortBy: 'price', sortDir: 'desc', minVolume: 150 });
-  expect(items.find((i) => i.token_address === 'x')).toBeDefined();
-  expect(items.find((i) => i.token_address === 'y')).toBeDefined();
-  // Enrichment overwrote prices
-  expect(items.find((i) => i.token_address === 'x')!.price_sol).toBe(1.2);
+  // x has volume 100 < 150 and should be filtered out; y remains
+  expect(items.find((i) => i.token_address === 'x')).toBeUndefined();
+  const y = items.find((i) => i.token_address === 'y');
+  expect(y).toBeDefined();
+  // Enrichment overwrote prices for remaining tokens
+  expect(y!.price_sol).toBe(2.3);
 });
 
 test('search path merges duplicates and prefers max volume/liquidity', async () => {

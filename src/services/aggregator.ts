@@ -11,10 +11,7 @@ import { applyFilters } from '../utils/filters';
 const memoryCache = new InMemoryCache();
 const redisCache = new RedisCache();
 let useRedis = false;
-
-(async () => {
-  useRedis = await redisCache.connect();
-})();
+let triedConnect = false;
 
 function cache() {
   return useRedis ? redisCache : (memoryCache as { get<T>(k: string): Promise<T | null>; set<T>(k: string, v: T, ttl?: number): Promise<void> });
@@ -43,6 +40,14 @@ function mergeTokens(lists: TokenData[][]): TokenData[] {
 }
 
 export async function getTokens(query: AggregationQuery): Promise<{ items: TokenData[]; nextCursor?: string }> {
+  if (!triedConnect) {
+    triedConnect = true;
+    if (process.env.NODE_ENV !== 'test') {
+      useRedis = await redisCache.connect();
+    } else {
+      useRedis = false;
+    }
+  }
   const { q, limit, cursor, sortBy = 'volume', sortDir = 'desc', period, minChange, minVolume } = query;
 
   const cacheKey = q
@@ -62,6 +67,11 @@ export async function getTokens(query: AggregationQuery): Promise<{ items: Token
       // Discover: use geckoterminal first page
       const g = await safeCall(() => listGeckoSolanaTokens(1), { items: [] });
       lists.push(g.items);
+      // Fallback if empty: broad DexScreener search to keep list populated
+      if (!g.items.length) {
+        const dsFallback = await safeCall(() => searchDexScreener('sol'), []);
+        lists.push(dsFallback);
+      }
     }
 
     items = mergeTokens(lists);

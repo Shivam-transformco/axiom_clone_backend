@@ -1,0 +1,41 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.diffTokens = diffTokens;
+function diffTokens(prev, next) {
+    const updates = [];
+    for (const t of next) {
+        const p = prev.get(t.token_address);
+        if (!p)
+            continue;
+        const changed = {};
+        if (numberChanged(p.price_sol, t.price_sol, 0.002)) {
+            changed.price_sol = t.price_sol;
+        }
+        if (numberChanged(p.volume_sol, t.volume_sol, 0.01)) {
+            changed.volume_sol = t.volume_sol;
+        }
+        if (numberChanged(p.market_cap_sol, t.market_cap_sol, 0.01)) {
+            changed.market_cap_sol = t.market_cap_sol;
+        }
+        if (numberChanged(p.liquidity_sol, t.liquidity_sol, 0.01)) {
+            changed.liquidity_sol = t.liquidity_sol;
+        }
+        if (numberChanged(p.transaction_count, t.transaction_count, 0)) {
+            changed.transaction_count = t.transaction_count;
+        }
+        if (Object.keys(changed).length) {
+            updates.push({ token_address: t.token_address, fields: changed, updated_at: Date.now() });
+        }
+    }
+    return updates;
+}
+function numberChanged(a, b, relThreshold = 0) {
+    if (a == null && b == null)
+        return false;
+    if (a == null || b == null)
+        return true;
+    if (a === 0)
+        return Math.abs(b) > 0;
+    const rel = Math.abs(b - a) / Math.abs(a);
+    return rel > relThreshold;
+}
