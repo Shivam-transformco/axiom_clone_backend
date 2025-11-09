@@ -1,0 +1,95 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Axiom Realtime Aggregation Demo</title>
+    <style>
+      body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, 'Helvetica Neue', Arial, 'Noto Sans', 'Apple Color Emoji', 'Segoe UI Emoji'; margin: 20px; }
+      .wrap { max-width: 960px; margin: auto; }
+      table { width: 100%; border-collapse: collapse; }
+      th, td { border-bottom: 1px solid #eee; padding: 8px; font-size: 14px; }
+      th { text-align: left; }
+      .badge { background: #eef; color: #224; padding: 2px 6px; border-radius: 4px; font-size: 12px; }
+      .green { color: #17803d; }
+      .red { color: #b00020; }
+      .muted { color: #666; }
+    </style>
+  </head>
+  <body>
+    <div class="wrap">
+      <h1>Axiom Realtime Aggregation Demo</h1>
+      <p class="muted">Open two tabs to see live WebSocket updates propagate.</p>
+      <div id="status" class="badge">Connecting…</div>
+      <h3>Top Tokens</h3>
+      <table>
+        <thead>
+          <tr>
+            <th>Ticker</th>
+            <th>Name</th>
+            <th>Price</th>
+            <th>Volume</th>
+            <th>Market Cap</th>
+            <th>Source</th>
+          </tr>
+        </thead>
+        <tbody id="rows"></tbody>
+      </table>
+    </div>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+      const rows = document.getElementById('rows');
+      const status = document.getElementById('status');
+      const format = (n) => (n == null ? '-' : Intl.NumberFormat('en-US', { maximumFractionDigits: 6 }).format(n));
+
+      const model = new Map();
+      function render() {
+        const arr = Array.from(model.values());
+        rows.innerHTML = arr
+          .slice(0, 30)
+          .map(t => `
+            <tr>
+              <td><strong>${t.token_ticker || ''}</strong></td>
+              <td>${t.token_name || ''}</td>
+              <td>${format(t.price_sol)}</td>
+              <td>${format(t.volume_sol)}</td>
+              <td>${format(t.market_cap_sol)}</td>
+              <td class="muted">${t.source || ''}</td>
+            </tr>
+          `).join('');
+      }
+
+      async function loadInitial() {
+        try {
+          const res = await fetch('/tokens?limit=30');
+          const data = await res.json();
+          (data.items || []).forEach(t => model.set(t.token_address, t));
+          render();
+        } catch (e) {}
+      }
+
+      loadInitial();
+
+      const socket = io();
+      socket.on('connect', () => {
+        status.textContent = 'Connected';
+      });
+      socket.on('disconnect', () => {
+        status.textContent = 'Disconnected';
+      });
+      socket.on('tokens:init', (payload) => {
+        (payload.items || []).forEach(t => model.set(t.token_address, t));
+        render();
+      });
+      socket.on('tokens:update', (payload) => {
+        (payload.updates || []).forEach(u => {
+          const t = model.get(u.token_address) || { token_address: u.token_address };
+          Object.assign(t, u.fields);
+          model.set(u.token_address, t);
+        });
+        render();
+      });
+    </script>
+  </body>
+</html>

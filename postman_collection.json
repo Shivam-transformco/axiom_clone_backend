@@ -1,0 +1,34 @@
+{
+  "info": {
+    "name": "Axiom Realtime Aggregation API",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Health",
+      "request": {"method": "GET", "url": {"raw": "{{BASE_URL}}/health", "host": ["{{BASE_URL}}"], "path": ["health"]}},
+      "response": []
+    },
+    {
+      "name": "Tokens - Discover",
+      "request": {"method": "GET", "url": {"raw": "{{BASE_URL}}/tokens?limit=20", "host": ["{{BASE_URL}}"], "path": ["tokens"], "query": [{"key":"limit","value":"20"}]}},
+      "response": []
+    },
+    {
+      "name": "Tokens - Search",
+      "request": {"method": "GET", "url": {"raw": "{{BASE_URL}}/tokens?q=sol&limit=10", "host": ["{{BASE_URL}}"], "path": ["tokens"], "query": [{"key":"q","value":"sol"},{"key":"limit","value":"10"}]}},
+      "response": []
+    },
+    {
+      "name": "Tokens - Sorting",
+      "request": {"method": "GET", "url": {"raw": "{{BASE_URL}}/tokens?sortBy=marketCap&sortDir=desc&limit=20", "host": ["{{BASE_URL}}"], "path": ["tokens"], "query": [{"key":"sortBy","value":"marketCap"},{"key":"sortDir","value":"desc"},{"key":"limit","value":"20"}]}},
+      "response": []
+    },
+    {
+      "name": "Tokens - Filters",
+      "request": {"method": "GET", "url": {"raw": "{{BASE_URL}}/tokens?period=24h&minChange=5&minVolume=10000", "host": ["{{BASE_URL}}"], "path": ["tokens"], "query": [{"key":"period","value":"24h"},{"key":"minChange","value":"5"},{"key":"minVolume","value":"10000"}]}},
+      "response": []
+    }
+  ],
+  "variable": [{"key": "BASE_URL", "value": "http://localhost:4000"}]
+}
