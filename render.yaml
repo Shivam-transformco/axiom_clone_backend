@@ -1,8 +1,10 @@
 services:
   - type: web
     name: axiom-realtime-aggregator
-    runtime: docker
+    env: node
     plan: free
+    buildCommand: npm ci && npm run build
+    startCommand: npm run start
     envVars:
       - key: PORT
         value: 10000
